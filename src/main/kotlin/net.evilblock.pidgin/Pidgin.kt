@@ -36,13 +36,13 @@ class Pidgin(
 			jedisPubSub!!.unsubscribe()
 		}
 
-		jedisPool.close()
+		jedisPool.destroy()
 	}
 
 	@JvmOverloads
 	fun sendMessage(message: Message, exceptionHandler: MessageExceptionHandler? = null) {
 		try {
-			jedisPool.resource.use { jedis -> jedis.publish(channel, message.id + ";" + gson.toJsonTree(message.data).toString()) }
+			jedisPool.resource.publish(channel, message.id + ";" + gson.toJsonTree(message.data).toString())
 		} catch (e: Exception) {
 			exceptionHandler?.onException(e)
 		}
@@ -90,10 +90,10 @@ class Pidgin(
 
 		if (options.async) {
 			ForkJoinPool.commonPool().execute {
-				jedisPool.resource.use { jedis -> jedis.subscribe(jedisPubSub!!, channel) }
+				jedisPool.resource.subscribe(jedisPubSub!!, channel)
 			}
 		} else {
-			jedisPool.resource.use { jedis -> jedis.subscribe(jedisPubSub!!, channel) }
+			jedisPool.resource.subscribe(jedisPubSub!!, channel)
 		}
 	}
 
